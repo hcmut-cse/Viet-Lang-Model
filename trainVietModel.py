@@ -103,7 +103,7 @@ model.add(Dense(vocab_size, activation='softmax'))
 print(model.summary())
 
 # continue checkpoint
-checkpoint = ModelCheckpoint('savedEpochs/model-epoch-{epoch:03d}.h5', period=1)
+checkpoint = ModelCheckpoint('savedEpochs/model-epoch-{epoch:03d}.h5', period=5)
 listEpochs = [x for x in os.listdir('savedEpochs/') if x[:12] == 'model-epoch-' and x[-3:] == '.h5']
 
 if (len(listEpochs) > 0):

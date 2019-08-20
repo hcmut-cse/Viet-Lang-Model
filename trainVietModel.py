@@ -3,12 +3,21 @@ import tensorflow as tf
 import numpy as np
 import argparse
 import pickle
+import tensorflow as tf
 from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.layers import Bidirectional
 from keras.callbacks import ModelCheckpoint
+from keras.backend.tensorflow_backend import set_session
+
+# Set GPU allow growth
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True  # dynamically grow the memory used on the GPU
+# config.log_device_placement = True  # to log device placement (on which device the operation ran)
+sess = tf.Session(config=config)
+set_session(sess)  # set this TensorFlow session as the default session for Keras
 
 def checkCorpus(string):
     currentDir = os.listdir()

@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-corpus', dest='corpus', type=checkCorpus, default='VNESEcorpus.txt')
 parser.add_argument('-epochs', dest='epochs', type=int, default=500)
 parser.add_argument('-seq_length', dest='seq_length', type=int, default=15)
-parser.add_argument('-part_size', dest='part_size', type=int, default=500000)
+parser.add_argument('-part_size', dest='part_size', type=int, default=50000)
 parser.add_argument('-checkpoint_period', dest='checkpoint_period', type=int, default=5)
 args = parser.parse_args()
 
@@ -105,8 +105,8 @@ sequences = np.array(sequences)
 X_train, y_train = sequences[:,:-1].copy(), sequences[:,-1].copy()
 
 del(sequences)
-input_shape = (seq_length, vocab_size)
 
+input_shape = (seq_length, vocab_size)
 current_part = 0
 max_part = int(len(X_train) / part_size) + 1
 lastEpoch = 0

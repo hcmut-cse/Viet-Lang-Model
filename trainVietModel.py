@@ -1,4 +1,5 @@
 import os
+import re
 import tensorflow as tf
 import numpy as np
 import argparse
@@ -6,9 +7,8 @@ import pickle
 import tensorflow as tf
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
-from keras.layers import Bidirectional
+from keras.layers import Dense, Dropout
+from keras.layers import LSTM, Embedding
 from keras.callbacks import ModelCheckpoint
 from keras.backend.tensorflow_backend import set_session
 
@@ -30,7 +30,7 @@ def checkCorpus(string):
 parser = argparse.ArgumentParser()
 parser.add_argument('-corpus', dest='corpus', type=checkCorpus, default='VNESEcorpus.txt')
 parser.add_argument('-epochs', dest='epochs', type=int, default=50)
-parser.add_argument('-seq_length', dest='seq_length', type=int, default=15)
+parser.add_argument('-seq_length', dest='seq_length', type=int, default=30)
 parser.add_argument('-part_size', dest='part_size', type=int, default=50000)
 parser.add_argument('-checkpoint_period', dest='checkpoint_period', type=int, default=5)
 args = parser.parse_args()
@@ -41,6 +41,20 @@ seq_length = args.seq_length
 epochs = args.epochs
 part_size = args.part_size
 period = args.checkpoint_period
+
+def text_cleaner(text):
+    # lower case text
+    newString = text.lower()
+    newString = re.sub(r"'s\b","",newString)
+    # remove punctuations
+    # INTAB = "ạảãàáâậầấẩẫăắằặẳẵóòọõỏôộổỗồốơờớợởỡéèẻẹẽêếềệểễúùụủũưựữửừứíìịỉĩýỳỷỵỹđẠẢÃÀÁÂẬẦẤẨẪĂẮẰẶẲẴÓÒỌÕỎÔỘỔỖỒỐƠỜỚỢỞỠÉÈẺẸẼÊẾỀỆỂỄÚÙỤỦŨƯỰỮỬỪỨÍÌỊỈĨÝỲỶỴỸĐ"
+    newString = re.sub("[^a-zA-ZạảãàáâậầấẩẫăắằặẳẵóòọõỏôộổỗồốơờớợởỡéèẻẹẽêếềệểễúùụủũưựữửừứíìịỉĩýỳỷỵỹđẠẢÃÀÁÂẬẦẤẨẪĂẮẰẶẲẴÓÒỌÕỎÔỘỔỖỒỐƠỜỚỢỞỠÉÈẺẸẼÊẾỀỆỂỄÚÙỤỦŨƯỰỮỬỪỨÍÌỊỈĨÝỲỶỴỸĐ]", " ", newString)
+    long_words=[]
+    # remove short word
+    for i in newString.split():
+        if len(i)>=2:
+            long_words.append(i)
+    return (" ".join(long_words)).strip()
 
 # load doc into memory
 def load_data(filename):
@@ -59,31 +73,32 @@ def save_data(lines, filename):
 	file.write(data)
 	file.close()
 
+def create_seq(text, length):
+    sequences = list()
+    for i in range(length, len(text)):
+        # select sequence of tokens
+        seq = text[i-length:i+1]
+        # store
+        sequences.append(seq)
+    print('Total Sequences: %d' % len(sequences))
+    return sequences
+
 if (not os.path.exists(corpusSequenceFile)):
     # load text
     raw_text = load_data(corpusFile)
     # print(raw_text)
 
     # clean
-    tokens = raw_text.split()
-    raw_text = ' '.join(tokens)
+    raw_text = text_cleaner(raw_text)
 
     # organize into sequences of characters
-    length = seq_length
-    sequences = list()
-    for i in range(length, len(raw_text)):
-    	# select sequence of tokens
-    	seq = raw_text[i-length:i+1]
-    	# store
-    	sequences.append(seq)
-    print('Total Sequences: %d' % len(sequences))
+    sequences = create_seq(raw_text, seq_length)
 
     # save sequences to file
     save_data(sequences, corpusSequenceFile)
 
     # Delete data to save memory
     del(sequences)
-    del(tokens)
     del(raw_text)
 
 # load
@@ -92,6 +107,9 @@ lines = raw_data.split('\n')
 
 chars = sorted(list(set(raw_data)))
 mapping = dict((c, i) for i, c in enumerate(chars))
+
+# save the mapping
+pickle.dump(mapping, open('viet-lang-mapping.pkl', 'wb'))
 
 sequences = list()
 for line in lines:
@@ -125,10 +143,9 @@ if (os.path.exists('savedEpochs/current_part.txt')):
 
 # define model
 model = Sequential()
-# model.add(LSTM(75, input_shape=(X.shape[1], X.shape[2])))
-model.add(Bidirectional(LSTM(100, return_sequences=True), input_shape=input_shape))
-model.add(Bidirectional(LSTM(100)))
-model.add(Dense(100, activation='relu'))
+model.add(Embedding(vocab_size, 50, input_length = seq_length, trainable=True))
+model.add(LSTM(150))
+model.add(Dropout(0.1))
 model.add(Dense(vocab_size, activation='softmax'))
 print(model.summary())
 
@@ -146,6 +163,7 @@ if (os.path.exists('savedEpochs/part_%d' % current_part)):
         print("CONTINUE TRAINING FROM PART %d EPOCH %03d......" % (current_part, lastEpoch))
     else:
         lastEpoch = 0
+# model.load_weights('model-epoch-050.h5')
 
 def constrain(x, min, max):
     if x < min:
@@ -173,18 +191,15 @@ for i in range(current_part, max_part):
     end_point = (i + 1) * part_size
     end_point = constrain(end_point, 0, len(X_train))
 
-    X = np.array([to_categorical(x, num_classes=vocab_size) for x in X_train[start_point:end_point]])
+    X = X_train[start_point:end_point]
     y = to_categorical(y_train[start_point:end_point], num_classes=vocab_size)
 
     # continue checkpoint
     checkpoint = ModelCheckpoint('savedEpochs/part_%d/model-epoch-{epoch:03d}.h5' % i, period=period)
 
     # fit model
-    model.fit(X, y, epochs=epochs, initial_epoch = lastEpoch, validation_split=0.1, callbacks=[checkpoint])
+    model.fit(X, y, epochs=epochs, initial_epoch = lastEpoch, callbacks=[checkpoint])
 
 
 # save the model to file
 model.save('viet-lang-model.h5')
-
-# save the mapping
-pickle.dump(mapping, open('viet-lang-mapping.pkl', 'wb'))

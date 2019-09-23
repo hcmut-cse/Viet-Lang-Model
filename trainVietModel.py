@@ -29,7 +29,7 @@ def checkCorpus(string):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-corpus', dest='corpus', type=checkCorpus, default='VNESEcorpus.txt')
-parser.add_argument('-epochs', dest='epochs', type=int, default=50)
+parser.add_argument('-epochs', dest='epochs', type=int, default=36)
 parser.add_argument('-seq_length', dest='seq_length', type=int, default=30)
 parser.add_argument('-part_size', dest='part_size', type=int, default=50000)
 parser.add_argument('-checkpoint_period', dest='checkpoint_period', type=int, default=5)

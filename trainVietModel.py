@@ -9,6 +9,7 @@ from keras.utils import to_categorical
 from keras.models import Sequential
 from keras.layers import Dense, Dropout
 from keras.layers import LSTM, Embedding
+from keras.layers import Bidirectional
 from keras.callbacks import ModelCheckpoint
 from keras.backend.tensorflow_backend import set_session
 
@@ -29,9 +30,10 @@ def checkCorpus(string):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-corpus', dest='corpus', type=checkCorpus, default='VNESEcorpus.txt')
-parser.add_argument('-epochs', dest='epochs', type=int, default=50)
+parser.add_argument('-epochs', dest='epochs', type=int, default=15)
 parser.add_argument('-seq_length', dest='seq_length', type=int, default=30)
-parser.add_argument('-part_size', dest='part_size', type=int, default=50000)
+parser.add_argument('-part_size', dest='part_size', type=int, default=200000)
+parser.add_argument('-batch_size', dest='batch_size', type=int, default=100)
 parser.add_argument('-checkpoint_period', dest='checkpoint_period', type=int, default=5)
 args = parser.parse_args()
 
@@ -144,13 +146,18 @@ if (os.path.exists('savedEpochs/current_part.txt')):
 # define model
 model = Sequential()
 model.add(Embedding(vocab_size, 50, input_length = seq_length, trainable=True))
-model.add(LSTM(150))
-model.add(Dropout(0.1))
+model.add(LSTM(512, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(512, return_sequences=True))
+model.add(Dropout(0.2))
+model.add(LSTM(512))
+model.add(Dropout(0.2))
 model.add(Dense(vocab_size, activation='softmax'))
 print(model.summary())
 
 # compile model
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+# model.load_weights("model-epoch-035.h5")
 
 if (os.path.exists('savedEpochs/part_%d' % current_part)):
     listEpochs = [x for x in os.listdir('savedEpochs/part_%d' % current_part) if x[:12] == 'model-epoch-' and x[-3:] == '.h5']
@@ -198,7 +205,7 @@ for i in range(current_part, max_part):
     checkpoint = ModelCheckpoint('savedEpochs/part_%d/model-epoch-{epoch:03d}.h5' % i, period=period)
 
     # fit model
-    model.fit(X, y, epochs=epochs, initial_epoch = lastEpoch, callbacks=[checkpoint])
+    model.fit(X, y, epochs=epochs, initial_epoch = lastEpoch, callbacks=[checkpoint], batch_size=args.batch_size)
 
 
 # save the model to file

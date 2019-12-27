@@ -7,7 +7,10 @@ from keras import backend as K
 from keras.backend.tensorflow_backend import set_session
 import argparse
 import underthesea
+<<<<<<< HEAD
 import numpy as np
+=======
+>>>>>>> efd3544915b9129429ab33322b61e33d59438383
 import re
 
 # Set GPU allow growth
@@ -41,10 +44,13 @@ def encode_string(mapping, seq_length, in_text):
 	# truncate sequences to a fixed length
 	encoded = pad_sequences([encoded], maxlen=seq_length, truncating='pre')
 
+<<<<<<< HEAD
 	# one hot encode
 	# encoded = to_categorical(encoded, num_classes=len(mapping))
 	# encoded = encoded.reshape(1, encoded.shape[1], encoded.shape[2])
 
+=======
+>>>>>>> efd3544915b9129429ab33322b61e33d59438383
 	return encoded
 
 def decode_string(mapping, in_text):
@@ -85,6 +91,7 @@ print("Number of layers: %d" % len(model.layers))
 
 # generate a sequence of characters with a language model
 def correct_mistake(model, mapping, seq_length, seed_text):
+<<<<<<< HEAD
 	# in_text = text_cleaner(seed_text)
 	# in_text = encode_string(mapping, seq_length, in_text)
 
@@ -248,6 +255,70 @@ def correct_mistake(model, mapping, seq_length, seed_text):
 	# 	# 	in_text = replace(in_text, predict_char_decoded, end_pos)
 
 	#return in_text
+=======
+	in_text = text_cleaner(seed_text)
+	# print(seed_text)
+    out_text = ""
+
+    # in_text_encoded = encode_string(in_text)
+    # for i in range(len(in_text)):
+
+
+
+
+
+
+
+
+
+
+
+
+
+	# text_pos = list(range(len(in_text)))
+	# for end_pos in text_pos:
+	# 	if (end_pos == 0):
+	# 		continue
+    #
+	# 	encoded = encode_string(mapping, seq_length, in_text[:end_pos])
+		# print(encoded.shape)
+
+		# Define get hidden layer output function
+		# lstm_1st = get_1st_lstm_output([encoded])
+		# print(lstm_1st)
+		# print(lstm_1st[0].shape)
+		# lstm_2nd = get_2nd_lstm_output(lstm_1st)
+		# print(lstm_2nd)
+		# print(lstm_2nd[0].shape)
+		# proba_output = get_proba_output(lstm_2nd)[0][0].tolist()
+		# print(proba_output)
+		# print(proba_output[0].shape)
+
+		# proba_output = model.predict_proba(encoded)[0].tolist()
+        #
+		# next_char_encoded = mapping[in_text[end_pos]]
+		# next_char_proba = proba_output[next_char_encoded]
+		# next_char_decoded = in_text[end_pos]
+
+		# predict_char_proba = max(proba_output)
+		# predict_char_encoded = proba_output.index(predict_char_proba)
+		# predict_char_decoded = decode_string(mapping, [predict_char_encoded])
+
+		# print("==================================")
+		# print("\"%s\" proba (Original): %f" % (in_text[end_pos], next_char_proba))
+		# print("\"%s\" proba (Predicted): %f" % (predict_char_decoded, predict_char_proba))
+		# print("==================================")
+
+		# if (predict_char_decoded == ' ' and in_text[end_pos] != ' ' and predict_char_proba > CORRECT_THRESHOLD and end_pos > 1 and next_char_proba < CORRECT_THRESHOLD):
+		# 	if (len(seed_text) - end_pos < 3):
+		# 		continue
+		# 	in_text = insert(in_text, ' ', end_pos)
+		# 	text_pos.append(len(text_pos))
+		# elif (predict_char_proba > next_char_proba and predict_char_proba > CORRECT_THRESHOLD and next_char_proba < CORRECT_THRESHOLD):
+		# 	in_text = replace(in_text, predict_char_decoded, end_pos)
+
+	return out_text
+>>>>>>> efd3544915b9129429ab33322b61e33d59438383
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser()

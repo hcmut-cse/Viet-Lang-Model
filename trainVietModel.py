@@ -151,6 +151,7 @@ print(model.summary())
 
 # compile model
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+# model.load_weights("model-epoch-035.h5")
 
 if (os.path.exists('savedEpochs/part_%d' % current_part)):
     listEpochs = [x for x in os.listdir('savedEpochs/part_%d' % current_part) if x[:12] == 'model-epoch-' and x[-3:] == '.h5']
